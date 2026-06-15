@@ -1,0 +1,793 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  .sd-wrap, .sd-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .sd-wrap {
+    --canvas: #EEF2F8;
+    --surface: #FFFFFF;
+    --head-fill: #F7F9FD;
+    --primary: #1D4ED8;
+    --primary-dark: #163C8C;
+    --primary-soft: #E5EEFD;
+    --border: #E2E8F2;
+    --text: #1B2434;
+    --text-muted: #748096;
+    --muted-fill: #F1F4F9;
+    --muted-border: #DCE3ED;
+
+    font-family: 'Inter', sans-serif;
+    background: var(--canvas);
+    color: var(--text);
+    padding: 28px;
+    width: 100%;
+    position: relative;
+  }
+
+  .sd-card {
+    max-width: 1240px;
+    margin: 0 auto;
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(22,42,90,0.04), 0 16px 40px -24px rgba(22,42,90,0.25);
+    overflow: hidden;
+  }
+
+  .sd-topbar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary) 55%, #5B8DEF);
+  }
+
+  /* Header */
+  .sd-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 26px 32px 22px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .sd-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 21px;
+    color: var(--primary-dark);
+    letter-spacing: -0.01em;
+  }
+
+  .sd-subtitle {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .sd-token-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary-soft);
+    border: 1px solid #C7D9FB;
+    border-radius: 999px;
+    padding: 8px 14px 8px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--primary-dark);
+    white-space: nowrap;
+  }
+
+  .sd-token-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22C55E;
+    box-shadow: 0 0 0 3px rgba(34,197,94,0.18);
+    flex-shrink: 0;
+  }
+
+  .sd-token-badge svg { flex-shrink: 0; color: var(--primary); }
+
+  .sd-token-badge .sd-token-value {
+    letter-spacing: 0.18em;
+    font-weight: 600;
+    color: var(--primary-dark);
+  }
+
+  /* Toolbar */
+  .sd-toolbar {
+    display: flex;
+    gap: 12px;
+    padding: 16px 32px;
+    background: var(--head-fill);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .sd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13.5px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, opacity .15s ease, background .15s ease;
+  }
+
+  .sd-btn--primary {
+    background: var(--primary);
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px -4px rgba(29,78,216,0.55);
+  }
+
+  .sd-btn--secondary {
+    background: #FFFFFF;
+    color: var(--primary-dark);
+    border-color: var(--border);
+  }
+
+  .sd-btn:not(:disabled):hover { transform: translateY(-1px); }
+  .sd-btn:not(:disabled):active { transform: translateY(0); }
+  .sd-btn--secondary:not(:disabled):hover { background: var(--primary-soft); }
+  .sd-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .sd-btn svg { flex-shrink: 0; }
+
+  @keyframes sd-spin { to { transform: rotate(360deg); } }
+  .sd-spin { animation: sd-spin 0.8s linear infinite; }
+
+  /* Period calendar */
+  .sd-period { position: relative; }
+
+  .sd-calendar {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 296px;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px -16px rgba(22,42,90,0.25);
+    padding: 14px;
+    z-index: 50;
+    display: none;
+  }
+
+  .sd-calendar.show { display: block; }
+
+  .sd-cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--primary-dark);
+  }
+
+  .sd-cal-header button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+  }
+
+  .sd-cal-header button:hover { background: var(--primary-soft); color: var(--primary); }
+
+  .sd-cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .sd-cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+
+  .sd-cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.5px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  .sd-cal-day:hover { background: var(--primary-soft); }
+  .sd-cal-day.sd-cal-muted { color: #C7D1E2; cursor: default; }
+  .sd-cal-day.sd-cal-muted:hover { background: none; }
+  .sd-cal-day.sd-cal-today { font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--primary); }
+  .sd-cal-day.sd-cal-selected { background: var(--primary); color: #FFFFFF; font-weight: 600; }
+  .sd-cal-day.sd-cal-in-range { background: var(--primary-soft); color: var(--primary-dark); }
+
+  .sd-cal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  #calClear {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* Stats strip */
+  .sd-stats {
+    display: flex;
+    gap: 28px;
+    padding: 13px 32px;
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+
+  .sd-stats strong {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--primary-dark);
+    font-weight: 700;
+  }
+
+  /* Grid of directorate cards */
+  .sd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 18px;
+    padding: 22px 32px 30px;
+  }
+
+  .sd-dir {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    border-top: 4px solid var(--accent);
+    overflow: hidden;
+    align-self: start;
+  }
+
+  .sd-dir-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 18px;
+    background: var(--head-fill);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sd-dir-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--text);
+  }
+
+  .sd-dir-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .sd-dir-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition: color .2s ease;
+  }
+
+  .sd-dir-meta.sd-updated { color: var(--primary); }
+
+  .sd-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .sd-row:last-child { border-bottom: none; }
+  .sd-row:hover { background: #FAFBFE; }
+
+  .sd-row-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+  .sd-name {
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sd-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    border-radius: 4px;
+    padding: 2px 6px;
+    flex-shrink: 0;
+  }
+
+  .sd-tag--time   { color: var(--primary); background: var(--primary-soft); }
+  .sd-tag--avulso { color: var(--text-muted); background: var(--muted-fill); border: 1px dashed var(--muted-border); }
+
+  .sd-leads {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: color .2s ease;
+  }
+
+  .sd-leads.sd-updated { color: var(--primary); }
+
+  /* Toast */
+  .sd-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--primary-dark);
+    color: #FFFFFF;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 11px 18px;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px -10px rgba(15,30,70,0.45);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .25s ease, transform .25s ease;
+    pointer-events: none;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sd-toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 640px) {
+    .sd-header, .sd-stats { padding: 18px 20px; }
+    .sd-toolbar { padding: 14px 20px; }
+    .sd-grid { padding: 18px 20px 24px; }
+    .sd-toast { left: 20px; right: 20px; bottom: 16px; }
+  }
+</style>
+
+<div class="sd-wrap">
+  <div class="sd-card">
+    <div class="sd-topbar"></div>
+
+    <header class="sd-header">
+      <div>
+        <div class="sd-title">Painel de Gerenciamento de Vendas</div>
+        <div class="sd-subtitle">Times agrupados por diretoria</div>
+      </div>
+      <div class="sd-token-badge">
+        <span class="sd-token-dot"></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Token: <span class="sd-token-value">••••••••••••••••••••••</span></span>
+      </div>
+    </header>
+
+    <div class="sd-toolbar">
+      <button class="sd-btn sd-btn--primary" id="btnTime" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg>
+        Atualizar Leads por Time
+      </button>
+      <button class="sd-btn sd-btn--secondary" id="btnDiretoria" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>
+        Atualizar Leads por Diretoria
+      </button>
+      <div class="sd-period">
+        <button class="sd-btn sd-btn--secondary" id="btnPeriod" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span id="periodLabel">Selecionar período</span>
+        </button>
+        <div class="sd-calendar" id="sdCalendar">
+          <div class="sd-cal-header">
+            <button type="button" id="calPrev" aria-label="Mês anterior"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <span id="calMonthLabel"></span>
+            <button type="button" id="calNext" aria-label="Próximo mês"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+          <div class="sd-cal-weekdays">
+            <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+          </div>
+          <div class="sd-cal-days" id="calDays"></div>
+          <div class="sd-cal-footer">
+            <span id="calRangeText">Selecione a data inicial</span>
+            <button type="button" id="calClear">Limpar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sd-stats">
+      <span><strong>5</strong> diretorias</span>
+      <span><strong>35</strong> times</span>
+      <span><strong id="sd-total-leads">4.621</strong> leads no período</span>
+      <span>Última sincronização: <strong id="sd-last-sync">--:--:--</strong></span>
+    </div>
+
+    <div class="sd-grid">
+
+      <!-- Gianluca Rungue -->
+      <section class="sd-dir" style="--accent:#2563EB" data-diretoria="Gianluca Rungue">
+        <div class="sd-dir-head">
+          <div class="sd-dir-name"><span class="sd-dir-dot"></span>Diretoria · Gianluca Rungue</div>
+          <div class="sd-dir-meta">6 times · <span class="sd-meta-num" data-base="802">802</span> leads</div>
+        </div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Gianluca Rungue</span></div><span class="sd-leads" data-base="198" data-owner="Gianluca Rungue">198</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Daniela Ribeiro</span></div><span class="sd-leads" data-base="145" data-owner="Daniela Ribeiro">145</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Douglas Lorena</span></div><span class="sd-leads" data-base="132" data-owner="Douglas Lorena">132</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Erika Nascimento</span></div><span class="sd-leads" data-base="121" data-owner="Erika Nascimento">121</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Marcos Santos</span></div><span class="sd-leads" data-base="109" data-owner="Marcos Santos">109</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Pedro Augusto</span></div><span class="sd-leads" data-base="97" data-owner="Pedro Augusto">97</span></div>
+      </section>
+
+      <!-- Larissa Mendes -->
+      <section class="sd-dir" style="--accent:#1D4ED8" data-diretoria="Larissa Mendes">
+        <div class="sd-dir-head">
+          <div class="sd-dir-name"><span class="sd-dir-dot"></span>Diretoria · Larissa Mendes</div>
+          <div class="sd-dir-meta">7 times · <span class="sd-meta-num" data-base="956">956</span> leads</div>
+        </div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Larissa Mendes</span></div><span class="sd-leads" data-base="184" data-owner="Larissa Mendes">184</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Daniella Viegas</span></div><span class="sd-leads" data-base="156" data-owner="Daniella Viegas">156</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Guilherme Santos</span></div><span class="sd-leads" data-base="143" data-owner="Guilherme Santos">143</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Isabela Oliveira</span></div><span class="sd-leads" data-base="138" data-owner="Isabela Oliveira">138</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Bruna Lisboa</span></div><span class="sd-leads" data-base="125" data-owner="Bruna Lisboa">125</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Rafaela Souza</span></div><span class="sd-leads" data-base="112" data-owner="Rafaela Souza">112</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Alexandre Ribeiro</span></div><span class="sd-leads" data-base="98" data-owner="Alexandre Ribeiro">98</span></div>
+      </section>
+
+      <!-- Pedro Carvalho -->
+      <section class="sd-dir" style="--accent:#0EA5E9" data-diretoria="Pedro Carvalho">
+        <div class="sd-dir-head">
+          <div class="sd-dir-name"><span class="sd-dir-dot"></span>Diretoria · Pedro Carvalho</div>
+          <div class="sd-dir-meta">8 times · <span class="sd-meta-num" data-base="1041">1.041</span> leads</div>
+        </div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Pedro Carvalho</span></div><span class="sd-leads" data-base="176" data-owner="Pedro Carvalho">176</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Sthephane Cunha</span></div><span class="sd-leads" data-base="162" data-owner="Sthephane Cunha">162</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Thales Nascimento</span></div><span class="sd-leads" data-base="149" data-owner="Thales Nascimento">149</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Debora Antunes</span></div><span class="sd-leads" data-base="137" data-owner="Debora Antunes">137</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Ana Barroso</span></div><span class="sd-leads" data-base="124" data-owner="Ana Barroso">124</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Pedro Assis</span></div><span class="sd-leads" data-base="110" data-owner="Pedro Assis">110</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Gabriel Jesus</span></div><span class="sd-leads" data-base="95" data-owner="Gabriel Jesus">95</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Tulio Messias</span></div><span class="sd-leads" data-base="88" data-owner="Tulio Messias">88</span></div>
+      </section>
+
+      <!-- Rodrigo Oliveira -->
+      <section class="sd-dir" style="--accent:#4F46E5" data-diretoria="Rodrigo Oliveira">
+        <div class="sd-dir-head">
+          <div class="sd-dir-name"><span class="sd-dir-dot"></span>Diretoria · Rodrigo Oliveira</div>
+          <div class="sd-dir-meta">8 times · <span class="sd-meta-num" data-base="995">995</span> leads</div>
+        </div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Rodrigo Oliveira</span></div><span class="sd-leads" data-base="168" data-owner="Rodrigo Oliveira">168</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Joao Cossenzo</span></div><span class="sd-leads" data-base="151" data-owner="Joao Cossenzo">151</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Eduardo Vaz</span></div><span class="sd-leads" data-base="139" data-owner="Eduardo Vaz">139</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Luiz Santos</span></div><span class="sd-leads" data-base="126" data-owner="Luiz Santos">126</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Thais Moseli</span></div><span class="sd-leads" data-base="114" data-owner="Thais Moseli">114</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Joao Pedro</span></div><span class="sd-leads" data-base="102" data-owner="Joao Pedro">102</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--avulso">AVULSO</span><span class="sd-name">Vanessa Ramos</span></div><span class="sd-leads" data-base="61" data-owner="Vanessa Ramos">61</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--avulso">AVULSO</span><span class="sd-name">Larissa Machado</span></div><span class="sd-leads" data-base="134" data-owner="Larissa Machado">134</span></div>
+      </section>
+
+      <!-- Ygor Souza -->
+      <section class="sd-dir" style="--accent:#0891B2" data-diretoria="Ygor Souza">
+        <div class="sd-dir-head">
+          <div class="sd-dir-name"><span class="sd-dir-dot"></span>Diretoria · Ygor Souza</div>
+          <div class="sd-dir-meta">6 times · <span class="sd-meta-num" data-base="827">827</span> leads</div>
+        </div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Ygor Souza</span></div><span class="sd-leads" data-base="172" data-owner="Ygor Souza">172</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Beatriz Chagas</span></div><span class="sd-leads" data-base="158" data-owner="Beatriz Chagas">158</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Gabrielle Messias</span></div><span class="sd-leads" data-base="145" data-owner="Gabrielle Messias">145</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Gabriel Rocha</span></div><span class="sd-leads" data-base="130" data-owner="Gabriel Rocha">130</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Daniel Silva</span></div><span class="sd-leads" data-base="118" data-owner="Daniel Silva">118</span></div>
+        <div class="sd-row"><div class="sd-row-left"><span class="sd-tag sd-tag--time">TIME</span><span class="sd-name">Nicolle Braga</span></div><span class="sd-leads" data-base="104" data-owner="Nicolle Braga">104</span></div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="sd-toast" id="sdToast"></div>
+</div>
+
+<script>
+(function () {
+  var wrap = document.querySelector('.sd-wrap');
+  var fmt = function (n) { return n.toLocaleString('pt-BR'); };
+
+  function flash(el) {
+    el.classList.add('sd-updated');
+    setTimeout(function () { el.classList.remove('sd-updated'); }, 900);
+  }
+
+  function setLastSync() {
+    var now = new Date();
+    var p = function (n) { return String(n).padStart(2, '0'); };
+    wrap.querySelector('#sd-last-sync').textContent = p(now.getHours()) + ':' + p(now.getMinutes()) + ':' + p(now.getSeconds());
+  }
+
+  function showToast(msg, iconSvg) {
+    var toast = wrap.querySelector('#sdToast');
+    toast.innerHTML = iconSvg + '<span>' + msg + '</span>';
+    toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { toast.classList.remove('show'); }, 2600);
+  }
+
+  function recalcDirTotals() {
+    var total = 0;
+    wrap.querySelectorAll('.sd-dir').forEach(function (dir) {
+      var sum = 0;
+      dir.querySelectorAll('.sd-leads').forEach(function (el) {
+        sum += parseInt(el.textContent.replace(/\D/g, ''), 10);
+      });
+      var metaNum = dir.querySelector('.sd-meta-num');
+      metaNum.textContent = fmt(sum);
+      flash(dir.querySelector('.sd-dir-meta'));
+      total += sum;
+    });
+    var totalEl = wrap.querySelector('#sd-total-leads');
+    totalEl.textContent = fmt(total);
+    flash(totalEl);
+  }
+
+  function withLoading(btn, work) {
+    if (btn.disabled) return;
+    var icon = btn.querySelector('svg');
+    icon.classList.add('sd-spin');
+    btn.disabled = true;
+    setTimeout(function () {
+      work();
+      icon.classList.remove('sd-spin');
+      btn.disabled = false;
+      setLastSync();
+    }, 650);
+  }
+
+  var checkIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
+  wrap.querySelector('#btnTime').addEventListener('click', function () {
+    var btn = this;
+    withLoading(btn, function () {
+      wrap.querySelectorAll('.sd-leads').forEach(function (el) {
+        var base = parseInt(el.dataset.base, 10);
+        var variation = Math.round(base * (Math.random() * 0.2 - 0.1)); // -10% a +10%
+        var val = Math.max(0, base + variation);
+        el.textContent = val;
+        flash(el);
+      });
+      recalcDirTotals();
+      showToast('Leads atualizados por time', checkIcon);
+    });
+  });
+
+  wrap.querySelector('#btnDiretoria').addEventListener('click', function () {
+    var btn = this;
+    withLoading(btn, function () {
+      var total = 0;
+      wrap.querySelectorAll('.sd-meta-num').forEach(function (el) {
+        var base = parseInt(el.dataset.base, 10);
+        var variation = Math.round(base * (Math.random() * 0.16 - 0.08)); // -8% a +8%
+        var val = Math.max(0, base + variation);
+        el.textContent = fmt(val);
+        flash(el.closest('.sd-dir-meta'));
+        total += val;
+      });
+      var totalEl = wrap.querySelector('#sd-total-leads');
+      totalEl.textContent = fmt(total);
+      flash(totalEl);
+      showToast('Leads atualizados por diretoria', checkIcon);
+    });
+  });
+  // Calendário / filtro de período
+  //
+  // Para conectar com leads reais da RD Station CRM, aponte esta constante
+  // para o backend descrito em rd-station-leads-server/README.md, ex:
+  //   var RD_API_BASE = 'http://localhost:3001';
+  // Deixe em branco ('') para usar apenas a estimativa local.
+  var RD_API_BASE = '';
+
+  var BASE_TOTAL_LEADS = 4621;
+  var MONTHS_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  var today = new Date();
+  var viewYear = today.getFullYear();
+  var viewMonth = today.getMonth();
+  var selStart = null;
+  var selEnd = null;
+
+  function isSameDay(a, b) {
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  }
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function formatDate(d) { return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear(); }
+  function toISODate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+
+  function buildMonthCells(year, month) {
+    var firstDay = new Date(year, month, 1).getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var daysInPrevMonth = new Date(year, month, 0).getDate();
+    var cells = [];
+    for (var i = firstDay - 1; i >= 0; i--) {
+      cells.push({ day: daysInPrevMonth - i, current: false, date: new Date(year, month - 1, daysInPrevMonth - i) });
+    }
+    for (var d = 1; d <= daysInMonth; d++) {
+      cells.push({ day: d, current: true, date: new Date(year, month, d) });
+    }
+    var next = 1;
+    while (cells.length % 7 !== 0) {
+      cells.push({ day: next, current: false, date: new Date(year, month + 1, next) });
+      next++;
+    }
+    return cells;
+  }
+
+  function renderCalendar() {
+    wrap.querySelector('#calMonthLabel').textContent = MONTHS_PT[viewMonth] + ' de ' + viewYear;
+    var container = wrap.querySelector('#calDays');
+    container.innerHTML = '';
+    buildMonthCells(viewYear, viewMonth).forEach(function (cell) {
+      var el = document.createElement('div');
+      el.className = 'sd-cal-day';
+      el.textContent = cell.day;
+      if (!cell.current) el.classList.add('sd-cal-muted');
+      if (isSameDay(cell.date, today)) el.classList.add('sd-cal-today');
+      if (selStart && isSameDay(cell.date, selStart)) el.classList.add('sd-cal-selected');
+      if (selEnd && isSameDay(cell.date, selEnd)) el.classList.add('sd-cal-selected');
+      if (selStart && selEnd && cell.date > selStart && cell.date < selEnd) el.classList.add('sd-cal-in-range');
+      if (cell.current) {
+        el.addEventListener('click', function () { onDayClick(cell.date); });
+      }
+      container.appendChild(el);
+    });
+  }
+
+  function onDayClick(date) {
+    if (!selStart || (selStart && selEnd)) {
+      selStart = date;
+      selEnd = null;
+    } else if (date < selStart) {
+      selEnd = selStart;
+      selStart = date;
+    } else {
+      selEnd = date;
+    }
+    renderCalendar();
+    updatePeriodSummary();
+  }
+
+  function updatePeriodSummary() {
+    var label = wrap.querySelector('#periodLabel');
+    var info = wrap.querySelector('#calRangeText');
+    if (!selStart) {
+      label.textContent = 'Selecionar período';
+      info.textContent = 'Selecione a data inicial';
+      return;
+    }
+    if (!selEnd) {
+      label.textContent = formatDate(selStart) + ' – ...';
+      info.textContent = 'Selecione a data final';
+      return;
+    }
+    label.textContent = formatDate(selStart) + ' – ' + formatDate(selEnd);
+    var days = Math.round((selEnd - selStart) / 86400000) + 1;
+    var diasTexto = days + (days > 1 ? ' dias selecionados' : ' dia selecionado');
+    var localEstimate = Math.max(0, Math.round(BASE_TOTAL_LEADS * days / 30));
+
+    if (!RD_API_BASE) {
+      info.textContent = diasTexto + ' · ~' + fmt(localEstimate) + ' leads (estimativa local)';
+      return;
+    }
+
+    info.textContent = diasTexto + ' · buscando na RD Station…';
+    var url = RD_API_BASE + '/api/leads?inicio=' + toISODate(selStart) + '&fim=' + toISODate(selEnd);
+
+    fetch(url)
+      .then(function (resp) {
+        if (!resp.ok) throw new Error('Resposta não OK');
+        return resp.json();
+      })
+      .then(function (data) {
+        var porTime = data.por_time || {};
+        var porDiretoria = data.por_diretoria || {};
+
+        wrap.querySelectorAll('.sd-leads[data-owner]').forEach(function (el) {
+          var owner = el.dataset.owner;
+          var val = porTime.hasOwnProperty(owner) ? porTime[owner] : 0;
+          el.textContent = val;
+          flash(el);
+        });
+
+        wrap.querySelectorAll('.sd-dir[data-diretoria]').forEach(function (dir) {
+          var dirName = dir.dataset.diretoria;
+          var metaNum = dir.querySelector('.sd-meta-num');
+          var val = porDiretoria.hasOwnProperty(dirName) ? porDiretoria[dirName] : 0;
+          metaNum.textContent = fmt(val);
+          flash(dir.querySelector('.sd-dir-meta'));
+        });
+
+        var totalEl = wrap.querySelector('#sd-total-leads');
+        totalEl.textContent = fmt(data.total_leads);
+        flash(totalEl);
+
+        var extra = data.sem_mapeamento ? (' · ' + fmt(data.sem_mapeamento) + ' sem time mapeado') : '';
+        info.textContent = diasTexto + ' · ' + fmt(data.total_leads) + ' leads (RD Station CRM)' + extra;
+      })
+      .catch(function () {
+        info.textContent = diasTexto + ' · ~' + fmt(localEstimate) + ' leads (estimativa local — backend indisponível)';
+      });
+  }
+
+  wrap.querySelector('#calPrev').addEventListener('click', function () {
+    viewMonth--;
+    if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    renderCalendar();
+  });
+
+  wrap.querySelector('#calNext').addEventListener('click', function () {
+    viewMonth++;
+    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    renderCalendar();
+  });
+
+  wrap.querySelector('#calClear').addEventListener('click', function (e) {
+    e.stopPropagation();
+    selStart = null;
+    selEnd = null;
+    renderCalendar();
+    updatePeriodSummary();
+  });
+
+  wrap.querySelector('#btnPeriod').addEventListener('click', function (e) {
+    e.stopPropagation();
+    wrap.querySelector('#sdCalendar').classList.toggle('show');
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!wrap.querySelector('.sd-period').contains(e.target)) {
+      wrap.querySelector('#sdCalendar').classList.remove('show');
+    }
+  });
+
+  renderCalendar();
+  updatePeriodSummary();
+})();
+</script>
